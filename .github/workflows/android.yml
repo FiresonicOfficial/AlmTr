@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -31,34 +31,31 @@ jobs:
 
       - name: Prepare Environment & Secrets
         run: |
-          # Secrets Gradle Plugin expects .env file; copy from .env.example if missing
+          # Secrets Gradle Plugin expects .env file; create from .env.example
           if [ ! -f .env ] && [ -f .env.example ]; then
             cp .env.example .env
+          elif [ ! -f .env ]; then
+            touch .env
           fi
-          # Restore debug keystore if present in repo
+
+          # Restore debug keystore if encoded file is available
           if [ -f debug.keystore.base64 ] && [ ! -f debug.keystore ]; then
             base64 -d debug.keystore.base64 > debug.keystore || true
           fi
-          # Ensure gradlew executable if present
-          if [ -f gradlew ]; then
-            chmod +x gradlew
+
+          # Ensure Gradle wrapper exists and is executable
+          if [ ! -f gradlew ]; then
+            gradle wrapper --gradle-version 9.3.1
           fi
+          chmod +x gradlew
 
       - name: Run Unit Tests
         run: |
-          if [ -f gradlew ]; then
-            ./gradlew testDebugUnitTest --no-daemon --stacktrace
-          else
-            gradle testDebugUnitTest --no-daemon --stacktrace
-          fi
+          ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
       - name: Build Debug APK
         run: |
-          if [ -f gradlew ]; then
-            ./gradlew assembleDebug --no-daemon --stacktrace
-          else
-            gradle assembleDebug --no-daemon --stacktrace
-          fi
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload Test Results
         if: always()
@@ -68,7 +65,7 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest/
           if-no-files-found: ignore
 
-      - name: Upload Debug APK Artifact
+      - name: Upload Debug APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
