@@ -1,0 +1,6 @@
+{
+  "name": "WortMeister",
+  "description": "Almanca-Türkçe kelime, artikel ve çeviri alıştırma oyunu ve detaylı başarı analiz tablosu",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
